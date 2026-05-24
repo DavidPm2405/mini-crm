@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<h4 class="fw-bold mb-4">Dashboard</h4>
+
+<!-- Tarjetas -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-lg-3">
+    <div class="card stat-card total p-3">
+      <div class="text-muted small mb-1">Total clientes</div>
+      <div class="fs-3 fw-bold text-primary">{{ total }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card stat-card lead p-3">
+      <div class="text-muted small mb-1">Leads</div>
+      <div class="fs-3 fw-bold text-warning">{{ leads }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card stat-card active p-3">
+      <div class="text-muted small mb-1">Activos</div>
+      <div class="fs-3 fw-bold text-success">{{ active }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card stat-card inactive p-3">
+      <div class="text-muted small mb-1">Inactivos</div>
+      <div class="fs-3 fw-bold text-secondary">{{ inactive }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Gráfico + Recientes -->
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card p-3">
+      <h6 class="fw-semibold mb-3">Clientes por estado</h6>
+      {% if total %}
+        <canvas id="pieChart" height="200"></canvas>
+      {% else %}
+        <p class="text-muted text-center py-4">Sin clientes aún.</p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-semibold mb-0">Clientes recientes</h6>
+        <a href="{{ url_for('add_client') }}" class="btn btn-sm btn-primary">
+          <i class="bi bi-plus-lg"></i> Nuevo
+        </a>
+      </div>
+      {% if recent %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light"><tr>
+            <th>Nombre</th><th>Empresa</th><th>Estado</th><th>Fecha</th>
+          </tr></thead>
+          <tbody>
+            {% for c in recent %}
+            <tr style="cursor:pointer" onclick="location.href='{{ url_for('client_detail', client_id=c.id) }}'">
+              <td class="fw-semibold">{{ c.name }}</td>
+              <td class="text-muted small">{{ c.company or "—" }}</td>
+              <td>
+                <span class="badge bg-{{ STATUS_LABELS[c.status].color }}">
+                  {{ STATUS_LABELS[c.status].label }}
+                </span>
+              </td>
+              <td class="text-muted small">{{ c.created_at.strftime("%d/%m/%Y") }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <p class="text-muted text-center py-3">
+          Sin clientes. <a href="{{ url_for('add_client') }}">Agrega uno</a>.
+        </p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if total %}
+<script>
+new Chart(document.getElementById('pieChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Leads', 'Activos', 'Inactivos'],
+    datasets: [{ data: [{{ leads }}, {{ active }}, {{ inactive }}],
+      backgroundColor: ['#f9a825','#2e7d32','#757575'] }]
+  },
+  options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }, cutout: '60%' }
+});
+</script>
+{% endif %}
+{% endblock %}
