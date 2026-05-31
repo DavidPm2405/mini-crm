@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Registro{% endblock %}
+{% block title %}Sign Up{% endblock %}
 {% block content %}
 <div class="row justify-content-center mt-5">
   <div class="col-sm-8 col-md-5 col-lg-4">
     <div class="card p-4">
-      <h4 class="mb-4 text-center"><i class="bi bi-person-plus text-primary"></i> Crear cuenta</h4>
+      <h4 class="mb-4 text-center"><i class="bi bi-person-plus text-primary"></i> Create Account</h4>
       <form method="POST">
         <div class="mb-3">
-          <label class="form-label">Usuario</label>
+          <label class="form-label">Username</label>
           <input type="text" name="username" class="form-control" required autofocus>
         </div>
         <div class="mb-3">
@@ -15,13 +15,13 @@
           <input type="email" name="email" class="form-control" required>
         </div>
         <div class="mb-4">
-          <label class="form-label">Contraseña <span class="text-muted small">(mín. 6 caracteres)</span></label>
+          <label class="form-label">Password <span class="text-muted small">(min. 6 characters)</span></label>
           <input type="password" name="password" class="form-control" required>
         </div>
-        <button class="btn btn-primary w-100">Registrarse</button>
+        <button class="btn btn-primary w-100">Sign Up</button>
       </form>
       <p class="text-center mt-3 mb-0 text-muted small">
-        ¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Inicia sesión</a>
+        Already have an account? <a href="{{ url_for('login') }}">Log in</a>
       </p>
     </div>
   </div>

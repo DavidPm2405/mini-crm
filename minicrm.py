@@ -1,25 +1,34 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Client, Note
-from datetime import datetime
-import os
+from datetime import datetime, timedelta
+import os, secrets
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "crm-secret-key")
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///crm.db")
+app.config["SECRET_KEY"]                = os.environ.get("SECRET_KEY", "crm-secret-key")
+app.config["SQLALCHEMY_DATABASE_URI"]   = os.environ.get("DATABASE_URL", "sqlite:///crm.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+# ── Email config (Gmail) ──────────────────────────────────────────────────────
+app.config["MAIL_SERVER"]   = "smtp.gmail.com"
+app.config["MAIL_PORT"]     = 587
+app.config["MAIL_USE_TLS"]  = True
+app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME", "")
+app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD", "")
+
 db.init_app(app)
+mail = Mail(app)
 
 login_manager = LoginManager(app)
-login_manager.login_view = "login"
-login_manager.login_message = "Inicia sesión para continuar."
+login_manager.login_view    = "login"
+login_manager.login_message = "Please log in to continue."
 
 STATUS_LABELS = {
     "lead":     {"label": "Lead",     "color": "warning"},
-    "active":   {"label": "Activo",   "color": "success"},
-    "inactive": {"label": "Inactivo", "color": "secondary"},
+    "active":   {"label": "Active",   "color": "success"},
+    "inactive": {"label": "Inactive", "color": "secondary"},
 }
 
 @app.context_processor
@@ -37,7 +46,7 @@ def index():
     return redirect(url_for("dashboard"))
 
 
-# ── Auth ─────────────────────────────────────────────────────────────────────
+# ── Auth ──────────────────────────────────────────────────────────────────────
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -48,9 +57,9 @@ def register():
         email    = request.form["email"].strip().lower()
         password = request.form["password"]
         if User.query.filter((User.username == username) | (User.email == email)).first():
-            flash("El usuario o email ya existe.", "danger")
+            flash("Username or email already exists.", "danger")
         elif len(password) < 6:
-            flash("La contraseña debe tener al menos 6 caracteres.", "warning")
+            flash("Password must be at least 6 characters.", "warning")
         else:
             user = User(username=username, email=email,
                         password_hash=generate_password_hash(password))
@@ -72,7 +81,7 @@ def login():
         if user and check_password_hash(user.password_hash, password):
             login_user(user, remember=True)
             return redirect(url_for("dashboard"))
-        flash("Usuario o contraseña incorrectos.", "danger")
+        flash("Incorrect username or password.", "danger")
     return render_template("login.html")
 
 
@@ -81,6 +90,65 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("login"))
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard"))
+    if request.method == "POST":
+        email = request.form["email"].strip().lower()
+        user  = User.query.filter_by(email=email).first()
+        if user:
+            token  = secrets.token_urlsafe(32)
+            expiry = datetime.utcnow() + timedelta(hours=1)
+            user.reset_token        = token
+            user.reset_token_expiry = expiry
+            db.session.commit()
+            reset_url = url_for("reset_password", token=token, _external=True)
+            try:
+                msg = Message(
+                    subject="Mini CRM — Password Reset",
+                    sender=app.config["MAIL_USERNAME"],
+                    recipients=[email]
+                )
+                msg.body = (
+                    f"Hi {user.username},\n\n"
+                    f"Click the link below to reset your password (expires in 1 hour):\n\n"
+                    f"{reset_url}\n\n"
+                    f"If you did not request this, ignore this email.\n\n"
+                    f"— Mini CRM"
+                )
+                mail.send(msg)
+            except Exception:
+                flash("Could not send email. Check server email configuration.", "danger")
+                return render_template("forgot_password.html")
+        flash("If that email is registered, you will receive a reset link shortly.", "info")
+        return redirect(url_for("login"))
+    return render_template("forgot_password.html")
+
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    user = User.query.filter_by(reset_token=token).first()
+    if not user or not user.reset_token_expiry or user.reset_token_expiry < datetime.utcnow():
+        flash("This reset link is invalid or has expired.", "danger")
+        return redirect(url_for("forgot_password"))
+    if request.method == "POST":
+        password = request.form["password"]
+        confirm  = request.form["confirm"]
+        if len(password) < 6:
+            flash("Password must be at least 6 characters.", "warning")
+        elif password != confirm:
+            flash("Passwords do not match.", "danger")
+        else:
+            user.password_hash      = generate_password_hash(password)
+            user.reset_token        = None
+            user.reset_token_expiry = None
+            db.session.commit()
+            flash("Password updated successfully. Please log in.", "success")
+            return redirect(url_for("login"))
+    return render_template("reset_password.html", token=token)
 
 
 # ── Dashboard ─────────────────────────────────────────────────────────────────
@@ -132,7 +200,7 @@ def add_client():
         )
         db.session.add(client)
         db.session.commit()
-        flash("Cliente agregado.", "success")
+        flash("Client added successfully.", "success")
         return redirect(url_for("client_detail", client_id=client.id))
     return render_template("add_client.html")
 
@@ -160,7 +228,7 @@ def edit_client(client_id):
         client.company = request.form.get("company", "").strip()
         client.status  = request.form.get("status", "lead")
         db.session.commit()
-        flash("Cliente actualizado.", "success")
+        flash("Client updated.", "success")
         return redirect(url_for("client_detail", client_id=client.id))
     return render_template("edit_client.html", client=client)
 
@@ -173,7 +241,7 @@ def delete_client(client_id):
         return redirect(url_for("clients"))
     db.session.delete(client)
     db.session.commit()
-    flash("Cliente eliminado.", "success")
+    flash("Client deleted.", "success")
     return redirect(url_for("clients"))
 
 
@@ -190,7 +258,7 @@ def add_note(client_id):
         note = Note(client_id=client_id, content=content)
         db.session.add(note)
         db.session.commit()
-        flash("Nota agregada.", "success")
+        flash("Note added.", "success")
     return redirect(url_for("client_detail", client_id=client_id))
 
 
@@ -204,7 +272,7 @@ def delete_note(note_id):
     client_id = note.client_id
     db.session.delete(note)
     db.session.commit()
-    flash("Nota eliminada.", "success")
+    flash("Note deleted.", "success")
     return redirect(url_for("client_detail", client_id=client_id))
 
 

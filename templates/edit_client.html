@@ -1,17 +1,17 @@
 {% extends "base.html" %}
-{% block title %}Editar Cliente{% endblock %}
+{% block title %}Edit Client{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-md-7 col-lg-5">
-    <h4 class="fw-bold mb-4">Editar cliente</h4>
+    <h4 class="fw-bold mb-4">Edit Client</h4>
     <div class="card p-4">
       <form method="POST">
         <div class="mb-3">
-          <label class="form-label">Nombre <span class="text-danger">*</span></label>
+          <label class="form-label">Name <span class="text-danger">*</span></label>
           <input type="text" name="name" class="form-control" value="{{ client.name }}" required autofocus>
         </div>
         <div class="mb-3">
-          <label class="form-label">Empresa</label>
+          <label class="form-label">Company</label>
           <input type="text" name="company" class="form-control" value="{{ client.company }}">
         </div>
         <div class="mb-3">
@@ -19,20 +19,20 @@
           <input type="email" name="email" class="form-control" value="{{ client.email }}">
         </div>
         <div class="mb-3">
-          <label class="form-label">Teléfono</label>
+          <label class="form-label">Phone</label>
           <input type="text" name="phone" class="form-control" value="{{ client.phone }}">
         </div>
         <div class="mb-4">
-          <label class="form-label">Estado</label>
+          <label class="form-label">Status</label>
           <select name="status" class="form-select">
             <option value="lead"     {% if client.status == 'lead'     %}selected{% endif %}>Lead</option>
-            <option value="active"   {% if client.status == 'active'   %}selected{% endif %}>Activo</option>
-            <option value="inactive" {% if client.status == 'inactive' %}selected{% endif %}>Inactivo</option>
+            <option value="active"   {% if client.status == 'active'   %}selected{% endif %}>Active</option>
+            <option value="inactive" {% if client.status == 'inactive' %}selected{% endif %}>Inactive</option>
           </select>
         </div>
         <div class="d-flex gap-2">
-          <button class="btn btn-primary flex-fill">Guardar cambios</button>
-          <a href="{{ url_for('client_detail', client_id=client.id) }}" class="btn btn-outline-secondary">Cancelar</a>
+          <button class="btn btn-primary flex-fill">Save Changes</button>
+          <a href="{{ url_for('client_detail', client_id=client.id) }}" class="btn btn-outline-secondary">Cancel</a>
         </div>
       </form>
     </div>

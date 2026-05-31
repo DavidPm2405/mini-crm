@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -40,14 +40,14 @@
       <i class="bi bi-grid-1x2"></i> Dashboard
     </a>
     <a class="nav-link {% if request.endpoint == 'clients' %}active{% endif %}" href="{{ url_for('clients') }}">
-      <i class="bi bi-people"></i> Clientes
+      <i class="bi bi-people"></i> Clients
     </a>
     <a class="nav-link {% if request.endpoint == 'add_client' %}active{% endif %}" href="{{ url_for('add_client') }}">
-      <i class="bi bi-person-plus"></i> Nuevo cliente
+      <i class="bi bi-person-plus"></i> New Client
     </a>
     <hr style="border-color:rgba(255,255,255,.2); margin:.75rem 1.25rem">
     <a class="nav-link" href="{{ url_for('logout') }}">
-      <i class="bi bi-box-arrow-left"></i> Salir
+      <i class="bi bi-box-arrow-left"></i> Log Out
     </a>
   </nav>
   <div style="color:rgba(255,255,255,.5); font-size:.78rem; padding:1rem 1.25rem; position:absolute; bottom:0;">

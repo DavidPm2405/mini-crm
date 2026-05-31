@@ -8,30 +8,29 @@
     <span class="badge bg-{{ STATUS_LABELS[client.status].color }} me-2">
       {{ STATUS_LABELS[client.status].label }}
     </span>
-    <span class="text-muted small">Registrado el {{ client.created_at.strftime("%d/%m/%Y") }}</span>
+    <span class="text-muted small">Added on {{ client.created_at.strftime("%m/%d/%Y") }}</span>
   </div>
   <div class="d-flex gap-2">
     <a href="{{ url_for('edit_client', client_id=client.id) }}" class="btn btn-sm btn-outline-secondary">
-      <i class="bi bi-pencil"></i> Editar
+      <i class="bi bi-pencil"></i> Edit
     </a>
     <form method="POST" action="{{ url_for('delete_client', client_id=client.id) }}"
-          onsubmit="return confirm('¿Eliminar este cliente y todas sus notas?')">
-      <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Eliminar</button>
+          onsubmit="return confirm('Delete this client and all their notes?')">
+      <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Delete</button>
     </form>
   </div>
 </div>
 
-<!-- Info -->
 <div class="row g-3 mb-4">
   <div class="col-md-6">
     <div class="card p-3">
-      <h6 class="fw-semibold mb-3">Información de contacto</h6>
+      <h6 class="fw-semibold mb-3">Contact Information</h6>
       <table class="table table-sm mb-0">
-        <tr><td class="text-muted">Empresa</td><td>{{ client.company or "—" }}</td></tr>
+        <tr><td class="text-muted">Company</td><td>{{ client.company or "—" }}</td></tr>
         <tr><td class="text-muted">Email</td>
           <td>{% if client.email %}<a href="mailto:{{ client.email }}">{{ client.email }}</a>{% else %}—{% endif %}</td>
         </tr>
-        <tr><td class="text-muted">Teléfono</td>
+        <tr><td class="text-muted">Phone</td>
           <td>{% if client.phone %}<a href="tel:{{ client.phone }}">{{ client.phone }}</a>{% else %}—{% endif %}</td>
         </tr>
       </table>
@@ -39,23 +38,22 @@
   </div>
   <div class="col-md-6">
     <div class="card p-3 h-100">
-      <h6 class="fw-semibold mb-3">Agregar nota</h6>
+      <h6 class="fw-semibold mb-3">Add Note</h6>
       <form method="POST" action="{{ url_for('add_note', client_id=client.id) }}">
         <div class="mb-2">
           <textarea name="content" class="form-control" rows="3"
-            placeholder="Ej: Llamada realizada, interesado en el servicio..." required></textarea>
+            placeholder="E.g.: Call made, interested in the service..." required></textarea>
         </div>
         <button class="btn btn-primary btn-sm">
-          <i class="bi bi-plus-lg"></i> Agregar nota
+          <i class="bi bi-plus-lg"></i> Add Note
         </button>
       </form>
     </div>
   </div>
 </div>
 
-<!-- Notas -->
 <div class="card p-3">
-  <h6 class="fw-semibold mb-3">Notas e interacciones ({{ notes | length }})</h6>
+  <h6 class="fw-semibold mb-3">Notes & Interactions ({{ notes | length }})</h6>
   {% if notes %}
     {% for note in notes %}
     <div class="d-flex gap-3 mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
@@ -66,11 +64,11 @@
         </div>
       </div>
       <div class="flex-fill">
-        <div class="text-muted small mb-1">{{ note.created_at.strftime("%d/%m/%Y %H:%M") }}</div>
+        <div class="text-muted small mb-1">{{ note.created_at.strftime("%m/%d/%Y %H:%M") }}</div>
         <div>{{ note.content }}</div>
       </div>
       <form method="POST" action="{{ url_for('delete_note', note_id=note.id) }}"
-            onsubmit="return confirm('¿Eliminar esta nota?')">
+            onsubmit="return confirm('Delete this note?')">
         <button class="btn btn-sm btn-outline-danger py-0 px-2">
           <i class="bi bi-trash"></i>
         </button>
@@ -78,7 +76,7 @@
     </div>
     {% endfor %}
   {% else %}
-    <p class="text-muted text-center py-3">Sin notas aún. Agrega la primera arriba.</p>
+    <p class="text-muted text-center py-3">No notes yet. Add the first one above.</p>
   {% endif %}
 </div>
 {% endblock %}
